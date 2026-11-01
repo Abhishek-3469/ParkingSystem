@@ -1,8 +1,6 @@
-====================================================================
 PROJECT: ParkingVIEW Level-2 ANPR Toll Automation System
 DEVELOPED BY: Abhishek Kumar
 DATE: August 2026
-====================================================================
 
 --- OVERVIEW ---
 This project is a real-time, hybrid Automated Number Plate Recognition (ANPR) and Toll Management system made entirely by Abhishek Kumar. It uses a high-speed C++ computer vision engine to scan video feeds, and a Python WebSocket backend to process business logic, calculate fees, and push live data to a dynamic HTML/JS dashboard.
