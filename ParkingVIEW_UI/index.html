@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkingVIEW - Lane 1 Exit</title>
+    <style>
+        /* Base Reset & Industrial Theme */
+        * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        body { background-color: #e6e6e6; display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background-color 0.3s ease; }
+
+        /* --- Header --- */
+        .top-bar { background-color: #ffffff; border-bottom: 2px solid #ccc; display: flex; align-items: center; justify-content: space-between; padding: 2px 10px; height: 40px; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .logo-area { display: flex; align-items: center; }
+        .logo-text { color: #1e3f66; font-size: 26px; font-weight: bold; font-family: 'Trebuchet MS', sans-serif; letter-spacing: -1px; }
+        .logo-view { background-color: #1e3f66; color: white; padding: 0px 5px; font-size: 22px; font-weight: bold; font-family: 'Trebuchet MS', sans-serif; margin-left: 2px; }
+        .logo-tm { font-size: 10px; color: #1e3f66; font-weight: bold; margin-top: -15px; margin-left: 2px; }
+        .lane-info { color: #1e3f66; font-weight: bold; font-size: 12px; border-left: 2px solid #1e3f66; padding-left: 10px; line-height: 1.2; margin-left: 15px; }
+        .plaza-name { color: #1e3f66; font-size: 14px; font-weight: bold; text-align: center; flex-grow: 1; line-height: 1.2; }
+        .version-info { color: #1e3f66; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 10px; }
+        .btn-logout { background-color: #f4b084; border: 1px solid #c55a11; color: #c55a11; font-weight: bold; padding: 3px 15px; border-radius: 10px; cursor: pointer; }
+        
+        /* Theme Toggle Icon */
+        .theme-toggle { font-size: 20px; cursor: pointer; user-select: none; padding: 0 5px; }
+
+        /* --- Main Workspace Layout --- */
+        .workspace { display: grid; grid-template-columns: 1fr 1fr 1fr 95px; gap: 4px; padding: 4px; flex-grow: 1; min-height: 0; }
+        .col-left, .col-middle, .col-right { display: flex; flex-direction: column; gap: 2px; min-width: 0; height: 100%; }
+
+        /* --- Left Column: Vehicles & Actions --- */
+        .vehicle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #fff; padding: 2px; border: 1px solid #ccc; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .v-box { border: 2px solid #5b9bd5; height: 82px; display: flex; align-items: center; justify-content: center; background-color: #f2f2f2; font-size: 48px; cursor: pointer; transition: background 0.1s; width: 100%; }
+        .v-box:hover { background-color: #deeaf6; }
+        .v-box.active { background-color: #9bc2e6; border: 2px solid #1e3f66; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
+        
+        .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 2px; }
+        .btn-action { height: 35px; border: 1px solid #777; font-weight: bold; font-size: 10px; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; padding: 2px; color: #000; background: linear-gradient(to bottom, #d0869a 0%, #7ab2d6 100%); box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4); width: 100%; user-select: none; }
+        .btn-action:active { filter: brightness(0.9); box-shadow: inset 1px 1px 4px rgba(0,0,0,0.4); }
+
+        /* --- Middle Column: Transaction Form --- */
+        .col-middle { background-color: #f2f2f2; border: 1px solid #ccc; padding: 5px; overflow-y: auto; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .top-rounded-box { border: 1px solid #aebac9; border-radius: 12px; height: 50px; margin: 5px 25px 15px 25px; background-color: transparent; display: flex; align-items: center; justify-content: center; color: #d35400; font-weight: bold; font-size: 14px;}
+        
+        .form-row { display: flex; justify-content: space-between; margin-bottom: 4px; align-items: center; width: 100%; }
+        .f-label { font-weight: bold; color: #000; }
+        .f-val { color: #000; width: 50%; text-align: left; }
+        .f-val.amount { color: #a61c00; font-weight: bold; text-align: right; }
+        .f-val.highlight { font-weight: bold; font-size: 13px; background-color: #e2efda; padding: 2px; }
+        .f-select { width: 50%; padding: 1px; border: 1px solid #ccc; background-color: #fff; font-size: 11px; color: #333; cursor: pointer; }
+        
+        .qr-input { background-color: #fff2cc; height: 16px; width: 50%; border: none; display: inline-block; }
+        .pink-input { background-color: #f2dcdb; height: 16px; width: 50%; border: none; display: inline-block; }
+
+        .total-box { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px; width: 100%; }
+        .total-box span { font-size: 14px; font-weight: bold; }
+        .amount-display { background-color: #e2f0d9; border: 2px solid #548235; color: #a61c00; font-size: 18px; font-weight: bold; padding: 4px 0; border-radius: 20px; text-align: center; width: 50%; transition: background-color 0.3s; }
+
+        .btn-confirm { background: linear-gradient(to bottom, #d0869a 0%, #7ab2d6 100%); border: 1px solid #777; color: #000; font-size: 16px; font-weight: bold; padding: 6px; width: 100%; cursor: pointer; text-align: center; margin-bottom: 5px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4); user-select: none; }
+        .btn-confirm:active { filter: brightness(0.9); box-shadow: inset 1px 1px 4px rgba(0,0,0,0.4); }
+
+        .table-scroll-wrapper { width: 100%; height: 90px; overflow: scroll; border: 1px solid #ccc; background: #fff; margin-top: 5px; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .middle-table { width: 120%; border-collapse: collapse; }
+        .middle-table th { background-color: #70ad47; color: white; padding: 4px; font-size: 10px; border: 1px solid #fff; white-space: nowrap; }
+        .middle-table td { background-color: #1e3f66; color: white; padding: 4px; font-size: 10px; border-bottom: 1px solid #555; white-space: nowrap; }
+
+        /* --- Right Column: LIVE Camera Feeds --- */
+        .camera-wrapper { width: 100%; padding-bottom: 2px; transition: height 0.3s ease; overflow: hidden; }
+        .camera-feed { background-color: #000; width: 100%; height: 250px; border: 2px solid #333; position: relative; overflow: hidden; }
+        .live-video { width: 100%; height: 100%; object-fit: cover; background-color: #111; }
+        
+        .pip-camera { position: absolute; top: 5px; right: 5px; width: 25%; height: 25%; min-width: 85px; min-height: 55px; background-color: #222; border: 2px solid #fff; z-index: 10; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.5); cursor: pointer; transition: width 0.3s ease, height 0.3s ease; }
+        .pip-camera.expanded { width: 50%; height: 50%; }
+        
+        .cam-overlay-text { position: absolute; background: rgba(255, 0, 0, 0.7); color: white; font-size: 9px; padding: 2px 5px; font-weight: bold; z-index: 20; border-radius: 2px; }
+
+        .fullscreen-btn { position: absolute; bottom: 5px; right: 5px; background: rgba(0, 0, 0, 0.6); color: white; border: 1px solid #fff; padding: 2px 6px; cursor: pointer; font-size: 14px; z-index: 30; border-radius: 3px; user-select: none; transition: background 0.2s; }
+        .fullscreen-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .camera-feed:fullscreen { width: 100vw !important; height: 100vh !important; border: none !important; background-color: #000 !important; position: fixed !important; top: 0 !important; left: 0 !important; z-index: 9999; }
+        .pip-camera:fullscreen { width: 100vw !important; height: 100vh !important; top: 0 !important; right: 0 !important; left: 0 !important; bottom: 0 !important; border: none !important; background-color: #000 !important; z-index: 9999 !important; position: fixed !important; }
+        
+        .status-area { background-color: #e6e6e6; border: 1px solid #ccc; padding: 5px; flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; width: 100%; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .hide-cam-btn { background: linear-gradient(to bottom, #d0869a 0%, #7ab2d6 100%); border: 1px solid #777; padding: 3px 8px; font-size: 10px; font-weight: bold; display: inline-block; cursor: pointer; margin-bottom: 5px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4); align-self: flex-start; user-select: none; }
+        .hide-cam-btn:active { filter: brightness(0.9); }
+        .status-title { text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #000; }
+        .status-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: bold; width: 100%; padding-right: 10px; }
+        .status-row .date-val { color: #a61c00; font-family: monospace; font-size: 12px;}
+        .green-table { width: 100%; border-collapse: collapse; margin-top: 2px; background: #fff; border: 1px solid #ccc; table-layout: fixed; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .green-table th { background-color: #548235; color: white; padding: 4px 2px; font-size: 10px; border-right: 1px solid #fff; }
+        .green-table td { padding: 8px 2px; border-bottom: 1px solid #eee; text-align: center; font-size: 9px; }
+
+        /* --- Far Right Hardware Strip Structure --- */
+        .hardware-strip { width: 95px; background-color: #9ab0cf; border-left: 2px solid #7c93b6; display: flex; flex-direction: column; align-items: center; padding: 3px 0; overflow: hidden; height: 100%; gap: 3px; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        
+        .hw-group { border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; width: 92%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3px 0; background: rgba(255,255,255,0.15); box-shadow: inset 0 0 2px rgba(255,255,255,0.2); transition: all 0.2s ease; }
+        .hw-title { font-size: 10px; font-weight: bold; color: #000; text-transform: uppercase; margin-bottom: 10%; letter-spacing: 0.3px; text-align: center; width: 100%; }
+        .hw-symbol { font-size: 18px; line-height: 1.1; margin: 1px 0; text-align: center; display: flex; align-items: center; justify-content: center;}
+        .hw-lbl { font-size: 10px; font-weight: bold; text-align: center; margin-top: 10%; color: #000; }
+
+        /* Color Coding Grid Background States */
+        .cell-ok { background: rgba(40, 167, 69, 0.25) !important; border-color: #28a745 !important; }
+        .cell-fail { background: rgba(220, 53, 69, 0.25) !important; border-color: #dc3545 !important; }
+
+        .hw-btn { background: #666; border: 1px solid #444; color: white; border-radius: 2px; width: 70px; padding: 2px 0; font-size: 10px; font-weight: bold; cursor: pointer; text-align: center; margin: 1px 0; user-select: none; transition: background 0.1s;}
+        .hw-btn:active, .hw-btn.flash { background: #f39c12; color: #000; }
+
+        /* --- Barrier Arm Animation --- */
+        .barrier-arm {
+            transform-origin: 0% 50%; 
+            transform-box: fill-box;
+            transition: transform 0.9s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .barrier-arm.closed { transform: rotate(0deg); }
+        .barrier-arm.open { transform: rotate(-90deg); }
+
+        /* Bottom Status Bar */
+        .bottom-bar { background-color: #2e75b6; color: white; display: flex; justify-content: space-between; padding: 4px 10px; font-size: 11px; font-weight: bold; border-top: 2px solid #1e3f66; z-index: 10; width: 100%; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .bb-section { display: flex; flex-direction: column; gap: 2px; }
+        .lbl-black { color: #000; }
+        .val-white { color: #fff; }
+
+        /* ===============================================
+           DARK MODE OVERRIDES 
+           =============================================== */
+        body.dark-mode { background-color: #121212; }
+        body.dark-mode .top-bar { background-color: #1e1e1e; border-bottom: 2px solid #333; }
+        body.dark-mode .logo-text { color: #8ab4d8; }
+        body.dark-mode .logo-view { background-color: #8ab4d8; color: #1e1e1e; }
+        body.dark-mode .lane-info { color: #8ab4d8; border-left: 2px solid #8ab4d8; }
+        body.dark-mode .plaza-name { color: #8ab4d8; }
+        body.dark-mode .version-info { color: #8ab4d8; }
+        
+        body.dark-mode .vehicle-grid { background: #1e1e1e; border: 1px solid #333; }
+        body.dark-mode .v-box { border: 2px solid #444; background-color: #2c2c2c; }
+        body.dark-mode .v-box:hover { background-color: #3a3a3a; }
+        body.dark-mode .v-box.active { background-color: #3d5a80; border: 2px solid #8ab4d8; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        
+        body.dark-mode .btn-action { color: #fff; background: linear-gradient(to bottom, #4a2a33 0%, #2a4453 100%); box-shadow: inset 1px 1px 2px rgba(255,255,255,0.1); }
+        
+        body.dark-mode .col-middle { background-color: #1e1e1e; border: 1px solid #333; }
+        body.dark-mode .top-rounded-box { border: 1px solid #444; color: #ff9c66; }
+        body.dark-mode .f-label { color: #e0e0e0; }
+        body.dark-mode .f-val { color: #e0e0e0; }
+        body.dark-mode .f-val.amount { color: #ff8c69; }
+        body.dark-mode .f-val.highlight { background-color: #2a3b25; color: #b5e7a0; }
+        body.dark-mode .f-select { background-color: #333; color: #fff; border: 1px solid #555; }
+        body.dark-mode .qr-input { background-color: #4d4500; color: #fff; }
+        body.dark-mode .pink-input { background-color: #4d2d2d; color: #fff; }
+        body.dark-mode .total-box span { color: #e0e0e0; }
+        body.dark-mode .amount-display { background-color: #2a3b25; border: 2px solid #4a6b3a; color: #ff8c69; }
+        body.dark-mode .btn-confirm { background: linear-gradient(to bottom, #4a2a33 0%, #2a4453 100%); border: 1px solid #555; color: #fff; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.1); }
+        
+        body.dark-mode .table-scroll-wrapper { background: #1e1e1e; border: 1px solid #333; }
+        body.dark-mode .middle-table th { background-color: #3e5e30; color: #fff; border: 1px solid #2c4321; }
+        body.dark-mode .middle-table td { background-color: #2c3e50; color: #fff; border-bottom: 1px solid #1a2530; }
+        
+        body.dark-mode .status-area { background-color: #1e1e1e; border: 1px solid #333; }
+        body.dark-mode .status-title { color: #e0e0e0; }
+        body.dark-mode .status-row { color: #ccc; }
+        body.dark-mode .status-row .date-val { color: #ff9c66; }
+        body.dark-mode .green-table { background: #1e1e1e; border: 1px solid #333; }
+        body.dark-mode .green-table th { background-color: #3e5e30; border-right: 1px solid #2c4321; }
+        body.dark-mode .green-table td { border-bottom: 1px solid #333; color: #ccc; }
+        
+        body.dark-mode .hardware-strip { background-color: #2c3e50; border-left: 2px solid #1a2530; }
+        body.dark-mode .hw-group { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+        body.dark-mode .hw-title { color: #e0e0e0; }
+        body.dark-mode .hw-lbl { color: #e0e0e0; }
+        body.dark-mode .hw-btn { background: #444; border: 1px solid #666; color: #fff; }
+        
+        body.dark-mode .bottom-bar { background-color: #1a2b3c; border-top: 2px solid #333; }
+        body.dark-mode .lbl-black { color: #8ab4d8; }
+    </style>
+</head>
+<body>
+
+    <div id="history-modal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:#1e1e1e; border:3px solid #8ab4d8; z-index:100; box-shadow: 0 0 20px rgba(0,0,0,0.5); flex-direction: column;">
+        <div style="background:#1e1e1e; color:#8ab4d8; padding:8px 15px; font-size: 14px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #333;">
+            <span>🗄️ Parking Plaza Database Viewer (Last 50 Records)</span>
+            <span style="cursor:pointer; background: #c55a11; color: #fff; padding: 2px 10px; border-radius: 4px;" onclick="document.getElementById('history-modal').style.display='none'">CLOSE</span>
+        </div>
+        <div style="flex-grow:1; overflow-y:auto; padding:10px;">
+            <table class="middle-table" id="history-table" style="width:100%;">
+                <tr><th>Ticket ID</th><th>VRN</th><th>Class</th><th>Amount</th><th>Entry Gate</th><th>Exit Gate</th><th>Timestamp</th></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <div class="logo-area">
+            <span class="logo-text">P</span>
+            <span style="font-size: 20px; margin: 0 1px;">⛰️</span>
+            <span class="logo-text" style="margin-right: 2px;">RKING</span>
+            <span class="logo-view">VIEW</span>
+            <sup class="logo-tm">&trade;</sup>
+            <div class="lane-info">Lane : 1<br>Exit Lane</div>
+        </div>
+        <div class="plaza-name">
+            KASHIPUR Parking Plaza<br>KASHIPUR Km 175.000 to Km 252.200
+        </div>
+        <div class="version-info">
+            ( Version-1.0.0.34 )
+            <span id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</span>
+            <div class="btn-logout" onclick="alert('Logging out of terminal...')">Logout</div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        
+        <div class="col-left">
+            <div class="vehicle-grid">
+                <div class="v-box" onclick="selectVehicle(this, 'Car / Jeep / Van', 50.00)" style="color: #2e75b6;">🚗</div>
+                <div class="v-box" onclick="selectVehicle(this, 'LCV', 80.00)" style="color: #1e3f66;">🚚</div>
+                <div class="v-box" onclick="selectVehicle(this, 'Bus/Minibus', 100.00)" style="color: #2e75b6;">🚌</div>
+                <div class="v-box" onclick="selectVehicle(this, 'Tractor', 40.00)" style="color: #ffc000;">🚜</div>
+                <div class="v-box" onclick="selectVehicle(this, 'Heavy Truck', 150.00)" style="color: #7f7f7f;">🚛</div>
+                <div class="v-box" onclick="selectVehicle(this, 'Multi-Axle', 200.00)" style="color: #2e75b6;">🚂</div>
+                <div class="v-box" onclick="selectVehicle(this, 'Two/Three-Wheeler', 30.00)" style="color: #c00000;">🛺</div>
+                <div class="v-box" onclick="selectVehicle(this, 'Earth Mover', 250.00)" style="color: #1e3f66;">🚜</div>
+                <div class="v-box" style="color: #2e75b6; font-family: Arial; font-weight: bold; font-size: 36px; line-height: 1.1; text-align: center;">P<br><span style="font-size: 11px;">ARKING PLAZA BY A.K.</span></div>
+            </div>
+
+            <div class="action-grid">
+                <div class="btn-action" onclick="triggerQRReader()">Enable Tag/QR Reader</div>
+                <div class="btn-action" onclick="sysLog('Manual Transaction Enabled')">Enable Manual Trans</div>
+                <div class="btn-action" onclick="specialTransaction('Return Journey', 0.00)">Return Journey</div>
+                <div class="btn-action" onclick="specialTransaction('Exemption', 0.00)">Exemption</div>
+                <div class="btn-action" onclick="specialTransaction('Tow Vehicle', 0.00)">Tow Vehicle</div>
+                <div class="btn-action" onclick="sysLog('Simulation Mode Toggled')">Simulation</div>
+                <div class="btn-action" onclick="sysLog('Digital Payment Terminal Active')">Digital Payment</div>
+                <div class="btn-action" onclick="toggleBarrierManual()">Barrier Gate Toggle</div>
+                <div class="btn-action" onclick="toggleOHLS()">OHLS Toggle</div>
+            </div>
+        </div>
+
+        <div class="col-middle">
+            <div class="top-rounded-box" id="system-message">SYSTEM STANDBY</div>
+            
+            <div class="form-row"><span class="f-label">QR</span><span class="f-val qr-input" id="qr-area"></span></div>
+            <div class="form-row"><span class="f-label">Vehicle Registration #</span><span class="f-val"></span></div>
+            <div class="form-row"><span class="f-label">ANPR VRN #</span><span class="f-val highlight" id="val-vrn">WAITING...</span></div>
+            <div class="form-row"><span class="f-label">ANPR Confidence #</span><span class="f-val highlight" id="val-conf">0</span></div>
+            
+             <div class="form-row">
+                <span class="f-label">Entry Plaza</span>
+                <select class="f-select">
+                    <option>--Select--</option>
+                    <option>Entry Gate 1 (Staff & Vendors)</option>
+                    <option>B-1 Entry (Reserved Staff)</option>
+                    <option>B-2 Entry (Visitors)</option>
+                    <option>B-3 Entry (Visitors)</option>
+                    <option>Entry Gate 2 (Covering one side)</option>
+                    <option>Entry Gate 3 (Covering both side)</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <span class="f-label">Exit Plaza</span>
+                <select class="f-select">
+                    <option>--Select--</option>
+                    <option>Exit Ramp 1 (Collection point)</option>
+                    <option>Exit Gate 4</option>
+                </select>
+            </div>
+
+            <div class="form-row"><span class="f-label">Ticket Type</span><span class="f-val highlight" id="val-ticket-type" style="background:transparent;">NORMAL</span></div>
+            <div class="form-row"><span class="f-label">TC Class</span><span class="f-val highlight" id="val-class" style="background:transparent;"></span></div>
+            <div class="form-row"><span class="f-label">TC Sub Class</span><span class="f-val"></span></div>
+            <div class="form-row"><span class="f-label">TC Amount</span><span class="f-val amount" id="val-amount">₹ 0.00</span></div>
+            <div class="form-row"><span class="f-label">Pass Validate</span><span class="f-val pink-input" id="pass-val"></span></div>
+            <div class="form-row"><span class="f-label">Allowable Wt.</span><span class="f-val"></span></div>
+            <div class="form-row"><span class="f-label">Permissible Wt.</span><span class="f-val"></span></div>
+            <div class="form-row"><span class="f-label">Vehicle Wt.</span><span class="f-val"></span></div>
+
+            <div class="total-box">
+                <span>Total Amount</span>
+                <div class="amount-display" id="val-total">₹ 0.00</div>
+            </div>
+
+            <div class="btn-confirm" onclick="processTransaction()">Confirm & Print</div>
+
+            <div class="table-scroll-wrapper">
+                <table class="middle-table" id="recent-table">
+                    <tr><th>TC Class</th><th>VRN</th><th>MOP</th><th>Amount</th><th>Transaction</th></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-right">
+            <div class="camera-wrapper" id="camera-container">
+                <div class="camera-feed" id="anpr-feed-container">   
+                    <div class="cam-overlay-text" style="top: 5px; left: 5px;">LIVE ANPR VISION</div>                
+                    <img id="live-vid-stream" class="live-video" src="" alt="ANPR Camera" />
+                    <div class="fullscreen-btn" onclick="toggleFullScreen('anpr-feed-container')" title="ANPR Full Screen">⛶</div>
+                    
+                    <div class="pip-camera" id="avc-feed-container" onclick="togglePipSize(event)">
+                        <img id="live-avc-stream" class="live-video" src="" alt="AVC Camera" />
+                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 8px; text-align: center; line-height: 12px; z-index: 20;">AVC FEED</div>
+                        <div class="fullscreen-btn" style="bottom: 2px; right: 2px; padding: 1px 4px; font-size: 10px;" onclick="event.stopPropagation(); toggleFullScreen('avc-feed-container')" title="AVC Full Screen">⛶</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-area">
+                <div class="hide-cam-btn" id="btn-toggle-cam" onclick="toggleCamera()">Hide AVC Camera</div>
+                <div class="status-title">Lane Status</div>
+                
+                <div class="status-row"><span>Blacklist Update on</span><span class="date-val" id="log-1">06-07-2026 11:24:40</span></div>
+                <div class="status-row"><span>Data Transfer on</span><span class="date-val" id="log-2">06-07-2026 11:24:45</span></div>
+
+                <div class="status-title" style="margin-top: 8px;">Current Tag Transaction</div>
+                <table class="green-table">
+                    <tr><th>Tag ID</th><th>Tag Class</th><th>Blacklist Status</th><th>Tag Receive...</th></tr>
+                    <tr><td id="t-tag">--</td><td id="t-class">--</td><td id="t-stat">--</td><td id="t-rec">--</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="hardware-strip">
+            
+            <div class="hw-group" style="padding: 4px 0; cursor: pointer; background:rgba(255,255,255,0.3);" onclick="fetchHistory()" title="Search Database">
+                <div style="font-size: 20px; margin-bottom: 1px;">🔍</div>
+                <div class="hw-lbl" style="color: #000;">VIEW LOGS</div>
+            </div>
+
+            <div class="hw-group cell-fail" id="cell-ohls">
+                <div class="hw-title">OHLS</div>
+                <div class="hw-symbol" id="sym-ohls">❌</div>
+                <div class="hw-lbl" id="lbl-ohls" style="color: #bd2130;">LANE CLOSE</div>
+            </div>
+
+            <div class="hw-group cell-fail" id="cell-tls">
+                <div class="hw-title">TRAFFIC LT</div>
+                <div class="hw-symbol" id="sym-tls">
+                    <svg viewBox="0 0 40 80" width="20" height="40">
+                        <rect x="0" y="0" width="40" height="80" rx="8" fill="#333"/>
+                        <circle cx="20" cy="22" r="12" fill="#ff3b30"/>
+                        <circle cx="20" cy="58" r="12" fill="#34c759" opacity="0.2"/>
+                    </svg>
+                </div>
+                <div class="hw-lbl" id="lbl-tls" style="color: #bd2130;">STOP</div>
+            </div>
+
+            <div class="hw-group cell-fail" id="cell-barrier">
+                <div class="hw-title">BARRIER</div>
+                <div class="hw-symbol" id="sym-barrier">
+                    <svg viewBox="0 0 100 100" width="32" height="32">
+                        <g stroke="#333" stroke-width="2">
+                            <rect x="15" y="85" width="30" height="10" fill="#333"/>
+                            <path d="M 20 85 L 25 45 L 35 45 L 40 85 Z" fill="#333"/>
+                            <circle cx="30" cy="50" r="10" fill="#fff" stroke="#333" stroke-width="4"/>
+                            <g class="barrier-arm closed">
+                                <rect x="30" y="44" width="65" height="12" fill="#222"/>
+                                <polygon points="45,44 55,44 45,56 35,56" fill="#fff"/>
+                                <polygon points="65,44 75,44 65,56 55,56" fill="#fff"/>
+                                <polygon points="85,44 95,44 85,56 75,56" fill="#fff"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div class="hw-lbl" id="lbl-barrier" style="color: #bd2130;">GATE CLOSE</div>
+            </div>
+
+            <div class="hw-group" style="padding: 2px 0; background: transparent; border: none; box-shadow: none;">
+                <div class="hw-btn" id="btn-loop" onclick="triggerSensor('Exit Loop')">Exit Loop</div>
+                <div class="hw-btn" id="btn-ir" onclick="triggerSensor('IR Curtain')">IR</div>
+            </div>
+
+            <div class="hw-group cell-ok" id="cell-anpr">
+                <div class="hw-title">ANPR</div>
+                <div class="hw-symbol" id="sym-anpr">📹✔️</div>
+                <div class="hw-lbl" id="lbl-anpr" style="color: #1e7e34;">CONNECTED</div>
+            </div>
+
+            <div class="hw-group cell-fail" id="cell-rfid">
+                <div class="hw-title">RFID</div>
+                <div class="hw-symbol" id="sym-rfid">📡❌</div>
+                <div class="hw-lbl" id="lbl-rfid" style="color: #bd2130;">OFFLINE</div>
+            </div>
+
+            <div class="hw-group cell-fail" id="cell-printer">
+                <div class="hw-title">PRINTER</div>
+                <div class="hw-symbol" id="sym-printer">🖨️❌</div>
+                <div class="hw-lbl" id="lbl-printer" style="color: #bd2130;">OFFLINE</div>
+            </div>
+
+            <div class="hw-group cell-ok" id="cell-avc">
+                <div class="hw-title">AVC</div>
+                <div class="hw-symbol" id="sym-avc">📹✔️</div>
+                <div class="hw-lbl" id="lbl-avc" style="color: #1e7e34;">CONNECTED</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <div class="bb-section">
+            <span><span class="lbl-black">Collector</span> <span class="val-white">TCB001</span></span>
+            <span><span class="lbl-black">Operation Day</span> <span class="val-white" id="op-day"></span></span>
+        </div>
+        <div class="bb-section">
+            <span><span class="lbl-black">Current Shift</span> <span class="val-white">Shift B</span></span>
+            <span><span class="lbl-black">Lane Mode</span> <span class="val-white">Online</span></span>
+        </div>
+        <div class="bb-section" style="text-align: right;">
+            <span><span class="lbl-black">Login Time</span> <span class="val-white" id="login-time-val">09:47:06</span></span>
+            <span><span class="lbl-black">App Run Time</span> <span class="val-white" id="run-time-val"></span></span>
+        </div>
+    </div>
+
+    <script>
+        // --- System Clock & Dates ---
+        function formatDateTime(date) {
+            return date.getDate().toString().padStart(2, '0') + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getFullYear() + ' ' + date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0') + ':' + date.getSeconds().toString().padStart(2, '0');
+        }
+
+        const today = new Date();
+        const dateString = today.getDate().toString().padStart(2, '0') + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getFullYear();
+        document.getElementById('op-day').innerText = dateString;
+        
+        const loginStr = today.getHours().toString().padStart(2, '0') + ':' + today.getMinutes().toString().padStart(2, '0') + ':' + today.getSeconds().toString().padStart(2, '0');
+        document.getElementById('login-time-val').innerText = loginStr;
+        
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('run-time-val').innerText = now.toTimeString().split(' ')[0];
+        }, 1000);
+
+        // --- Core UI Logic ---
+        function sysLog(message) {
+            document.getElementById('system-message').innerText = message;
+            document.getElementById('log-2').innerText = formatDateTime(new Date());
+            setTimeout(() => { document.getElementById('system-message').innerText = "SYSTEM STANDBY"; }, 3000);
+        }
+
+        function selectVehicle(element, vClass, price) {
+            document.querySelectorAll('.v-box').forEach(box => box.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('val-class').innerText = vClass;
+            document.getElementById('val-ticket-type').innerText = "NORMAL";
+            document.getElementById('val-amount').innerText = "₹ " + price.toFixed(2);
+            document.getElementById('val-total').innerText = "₹ " + price.toFixed(2);
+        }
+
+        function processTransaction() {
+            let vrn = document.getElementById('val-vrn').innerText;
+            let vClass = document.getElementById('val-class').innerText;
+            let amount = document.getElementById('val-total').innerText.replace("₹ ", "");
+
+            if (vrn === "WAITING..." || vClass === "") {
+                alert("Missing Data: Please wait for ANPR scan and select a vehicle class.");
+                return;
+            }
+
+            sysLog("Transaction Complete. Barrier Opening.");
+            updateEquipment('barrier', 'open');
+
+            let table = document.getElementById('recent-table');
+            let row = table.insertRow(1);
+            row.insertCell(0).innerText = vClass;
+            row.insertCell(1).innerText = vrn;
+            row.insertCell(2).innerText = "CASH";
+            row.insertCell(3).innerText = amount;
+            row.insertCell(4).innerText = "T-" + Math.floor(Math.random() * 900 + 100);
+
+            try {
+                const dbPayload = {
+                    action: "SAVE_TRANSACTION",
+                    vrn: vrn,
+                    vehicle_class: vClass,
+                    amount: amount,
+                    entry_gate: document.querySelectorAll('.f-select')[0].value,
+                    exit_gate: document.querySelectorAll('.f-select')[1].value
+                };
+                if(socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify(dbPayload));
+                }
+            } catch (e) { console.log("Backend not connected."); }
+
+            let totalBox = document.getElementById('val-total');
+            totalBox.style.backgroundColor = "#82e0aa";
+            setTimeout(() => { totalBox.style.backgroundColor = ""; }, 500);
+
+            setTimeout(resetForm, 2500);
+        }
+
+        function resetForm() {
+            document.getElementById('val-vrn').innerText = "WAITING...";
+            document.getElementById('val-conf').innerText = "0";
+            document.getElementById('val-class').innerText = "";
+            document.getElementById('val-ticket-type').innerText = "NORMAL";
+            document.getElementById('val-amount').innerText = "₹ 0.00";
+            document.getElementById('val-total').innerText = "₹ 0.00";
+            document.querySelectorAll('.v-box').forEach(box => box.classList.remove('active'));
+            updateEquipment('barrier', 'close');
+        }
+
+        // --- Interactive Elements ---
+        let camVisible = true;
+        function toggleCamera() {
+            const cam = document.getElementById('camera-container');
+            const btn = document.getElementById('btn-toggle-cam');
+            if (camVisible) {
+                cam.style.height = "0px";
+                cam.style.border = "none";
+                btn.innerText = "Show AVC Camera";
+                sysLog("AVC Camera Hidden");
+            } else {
+                cam.style.height = "252px";
+                cam.style.border = "2px solid #333";
+                btn.innerText = "Hide AVC Camera";
+                sysLog("AVC Camera Restored");
+            }
+            camVisible = !camVisible;
+        }
+
+        function toggleFullScreen(targetId) {
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            if (document.fullscreenElement === target) {
+                if (document.exitFullscreen) document.exitFullscreen();
+            } else if (document.fullscreenElement) {
+                if (document.exitFullscreen) {
+                    const exitPromise = document.exitFullscreen();
+                    if (exitPromise && exitPromise.then) {
+                        exitPromise.then(() => {
+                            if (target.requestFullscreen) target.requestFullscreen();
+                        });
+                    } else {
+                        setTimeout(() => {
+                            if (target.requestFullscreen) target.requestFullscreen();
+                        }, 100);
+                    }
+                }
+            } else {
+                if (target.requestFullscreen) target.requestFullscreen();
+            }
+        }
+
+        function togglePipSize(event) {
+            if (event) event.stopPropagation();
+            const pip = document.getElementById('avc-feed-container');
+            if (pip) {
+                pip.classList.toggle('expanded');
+            }
+        }
+
+        // --- Theme Toggle ---
+        function toggleTheme() {
+            const body = document.body;
+            const toggleIcon = document.getElementById('theme-toggle');
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                toggleIcon.innerText = '☀️';
+            } else {
+                toggleIcon.innerText = '🌙';
+            }
+        }
+
+        // Internal State Anchors
+        let barrierOpen = false;
+        let ohlsState = false; // Initialized to False (Red/Closed)
+
+        function toggleBarrierManual() {
+            if(barrierOpen) {
+                updateEquipment('barrier', 'close');
+                sysLog("Barrier Gate Close");
+            } else {
+                updateEquipment('barrier', 'open');
+                sysLog("Barrier Gate Open");
+            }
+        }
+
+        function toggleOHLS() {
+            if(ohlsState) {
+                updateEquipment('ohls', 'red');
+                sysLog("OHLS Lane Close");
+            } else {
+                updateEquipment('ohls', 'green');
+                sysLog("OHLS Lane Open");
+            }
+        }
+
+        function triggerSensor(sensorName) {
+            let btnId = sensorName === 'Exit Loop' ? 'btn-loop' : 'btn-ir';
+            let btn = document.getElementById(btnId);
+            btn.classList.add('flash');
+            setTimeout(() => { btn.classList.remove('flash'); }, 200);
+            document.getElementById('log-1').innerText = formatDateTime(new Date());
+            sysLog(sensorName + " Activated");
+        }
+
+        function specialTransaction(type, price) {
+            document.getElementById('val-ticket-type').innerText = type;
+            document.getElementById('val-amount').innerText = "₹ " + price.toFixed(2);
+            document.getElementById('val-total').innerText = "₹ " + price.toFixed(2);
+            sysLog(type + " Mode Active");
+        }
+
+        function triggerQRReader() {
+            let qrBox = document.getElementById('qr-area');
+            qrBox.style.backgroundColor = "#f39c12"; 
+            sysLog("Waiting for QR Scan...");
+            setTimeout(() => { 
+                qrBox.style.backgroundColor = "";
+                qrBox.innerText = "QR-98374-VALID"; 
+                document.getElementById('val-ticket-type').innerText = "PREPAID TAG";
+                sysLog("QR Tag Validated");
+            }, 1000);
+        }
+
+        // --- Custom SVGs for Hardware Components ---
+        const barrierSVG = `
+            <svg viewBox="0 0 100 100" width="32" height="32">
+                <g stroke="#333" stroke-width="2">
+                    <rect x="15" y="85" width="30" height="10" fill="#333"/>
+                    <path d="M 20 85 L 25 45 L 35 45 L 40 85 Z" fill="#333"/>
+                    <circle cx="30" cy="50" r="10" fill="#fff" stroke="#333" stroke-width="4"/>
+                    <g class="barrier-arm closed">
+                        <rect x="30" y="44" width="65" height="12" fill="#222"/>
+                        <polygon points="45,44 55,44 45,56 35,56" fill="#fff"/>
+                        <polygon points="65,44 75,44 65,56 55,56" fill="#fff"/>
+                        <polygon points="85,44 95,44 85,56 75,56" fill="#fff"/>
+                    </g>
+                </g>
+            </svg>`;
+
+        const tlRedSVG = `
+            <svg viewBox="0 0 40 80" width="20" height="40">
+                <rect x="0" y="0" width="40" height="80" rx="8" fill="#333"/>
+                <circle cx="20" cy="22" r="12" fill="#ff3b30"/>
+                <circle cx="20" cy="58" r="12" fill="#34c759" opacity="0.2"/>
+            </svg>`;
+
+        const tlGreenSVG = `
+            <svg viewBox="0 0 40 80" width="20" height="40">
+                <rect x="0" y="0" width="40" height="80" rx="8" fill="#333"/>
+                <circle cx="20" cy="22" r="12" fill="#ff3b30" opacity="0.2"/>
+                <circle cx="20" cy="58" r="12" fill="#34c759"/>
+            </svg>`;
+
+        // --- MASTER DYNAMIC GRID SYSTEM CONTROLLER ---
+        function updateEquipment(equipmentName, state) {
+            
+            // 1. OHLS Condition Switching
+            if (equipmentName === 'ohls') {
+                const cell = document.getElementById('cell-ohls');
+                const sym = document.getElementById('sym-ohls');
+                const lbl = document.getElementById('lbl-ohls');
+                if (state === 'green' || state === 'open') {
+                    cell.className = "hw-group cell-ok";
+                    sym.innerText = "⬇️";
+                    lbl.innerText = "LANE OPEN";
+                    lbl.style.color = "#1e7e34";
+                    ohlsState = true;
+                } else {
+                    cell.className = "hw-group cell-fail";
+                    sym.innerText = "❌";
+                    lbl.innerText = "LANE CLOSE";
+                    lbl.style.color = "#bd2130";
+                    ohlsState = false;
+                }
+            }
+
+            // 2. ANPR Camera Condition Switching
+            if (equipmentName === 'anpr') {
+                const cell = document.getElementById('cell-anpr');
+                const sym = document.getElementById('sym-anpr');
+                const lbl = document.getElementById('lbl-anpr');
+                if (state === 'connected') {
+                    cell.className = "hw-group cell-ok";
+                    sym.innerText = "📹✔️";
+                    lbl.innerText = "CONNECTED";
+                    lbl.style.color = "#1e7e34";
+                } else {
+                    cell.className = "hw-group cell-fail";
+                    sym.innerText = "📹❌";
+                    lbl.innerText = "OFFLINE";
+                    lbl.style.color = "#bd2130";
+                }
+            }
+
+            // 3. AVC Camera Condition Switching
+            if (equipmentName === 'avc') {
+                const cell = document.getElementById('cell-avc');
+                const sym = document.getElementById('sym-avc');
+                const lbl = document.getElementById('lbl-avc');
+                if (state === 'connected') {
+                    cell.className = "hw-group cell-ok";
+                    sym.innerText = "📹✔️";
+                    lbl.innerText = "CONNECTED";
+                    lbl.style.color = "#1e7e34";
+                } else {
+                    cell.className = "hw-group cell-fail";
+                    sym.innerText = "📹❌";
+                    lbl.innerText = "OFFLINE";
+                    lbl.style.color = "#bd2130";
+                }
+            }
+
+            // 4. RFID Condition Switching
+            if (equipmentName === 'rfid') {
+                const cell = document.getElementById('cell-rfid');
+                const sym = document.getElementById('sym-rfid');
+                const lbl = document.getElementById('lbl-rfid');
+                if (state === 'connected') {
+                    cell.className = "hw-group cell-ok";
+                    sym.innerText = "📡✔️";
+                    lbl.innerText = "CONNECTED";
+                    lbl.style.color = "#1e7e34";
+                } else {
+                    cell.className = "hw-group cell-fail";
+                    sym.innerText = "📡❌";
+                    lbl.innerText = "OFFLINE";
+                    lbl.style.color = "#bd2130";
+                }
+            }
+
+            // 5. PRINTER Condition Switching
+            if (equipmentName === 'printer') {
+                const cell = document.getElementById('cell-printer');
+                const sym = document.getElementById('sym-printer');
+                const lbl = document.getElementById('lbl-printer');
+                if (state === 'connected') {
+                    cell.className = "hw-group cell-ok";
+                    sym.innerText = "🖨️✔️";
+                    lbl.innerText = "CONNECTED";
+                    lbl.style.color = "#1e7e34";
+                } else {
+                    cell.className = "hw-group cell-fail";
+                    sym.innerText = "🖨️❌";
+                    lbl.innerText = "OFFLINE";
+                    lbl.style.color = "#bd2130";
+                }
+            }
+
+            // 6 & 7. BARRIER GATE & TRAFFIC LIGHT SYNC SWITCHING
+            if (equipmentName === 'barrier') {
+                const bCell = document.getElementById('cell-barrier');
+                const bSym = document.getElementById('sym-barrier');
+                const bLbl = document.getElementById('lbl-barrier');
+                
+                const tCell = document.getElementById('cell-tls');
+                const tSym = document.getElementById('sym-tls');
+                const tLbl = document.getElementById('lbl-tls');
+
+                if (state === 'open' || state === 'up') {
+                    bCell.className = "hw-group cell-ok";
+                    if (!bSym.querySelector('.barrier-arm')) {
+                        bSym.innerHTML = barrierSVG;
+                    }
+                    const arm = bSym.querySelector('.barrier-arm');
+                    if (arm) {
+                        arm.classList.remove('closed');
+                        arm.classList.add('open');
+                    }
+                    bLbl.innerText = "GATE OPEN";
+                    bLbl.style.color = "#1e7e34";
+                    barrierOpen = true;
+
+                    tCell.className = "hw-group cell-ok";
+                    tSym.innerHTML = tlGreenSVG;
+                    tLbl.innerText = "GO";
+                    tLbl.style.color = "#1e7e34";
+                } else {
+                    bCell.className = "hw-group cell-fail";
+                    if (!bSym.querySelector('.barrier-arm')) {
+                        bSym.innerHTML = barrierSVG;
+                    }
+                    const arm = bSym.querySelector('.barrier-arm');
+                    if (arm) {
+                        arm.classList.remove('open');
+                        arm.classList.add('closed');
+                    }
+                    bLbl.innerText = "GATE CLOSE";
+                    bLbl.style.color = "#bd2130";
+                    barrierOpen = false;
+
+                    tCell.className = "hw-group cell-fail";
+                    tSym.innerHTML = tlRedSVG;
+                    tLbl.innerText = "STOP";
+                    tLbl.style.color = "#bd2130";
+                }
+            }
+        }
+
+        function fetchHistory() {
+            sysLog("Requesting Database Records...");
+            if(socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({action: "FETCH_HISTORY"}));
+            } else {
+                alert("Cannot connect to Python Backend!");
+            }
+        }
+
+        // --- WebSocket Interface Integration ---
+        const socket = new WebSocket('ws://localhost:8765');
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.action === "NEW_SCAN") {
+                document.getElementById('val-vrn').innerText = data.plate_number;
+                document.getElementById('val-conf').innerText = data.confidence;
+                sysLog("ANPR Data Received");
+            }
+            
+            if (data.action === "VIDEO_FRAME") {
+                document.getElementById('live-vid-stream').src = "data:image/jpeg;base64," + data.frame;
+            }
+
+            if (data.action === "EQUIPMENT_STATUS") {
+                updateEquipment(data.device, data.state);
+            }
+
+            if (data.action === "HISTORY_DATA") {
+                const table = document.getElementById('history-table');
+                while(table.rows.length > 1) { table.deleteRow(1); }
+                data.records.forEach(record => {
+                    let row = table.insertRow(-1);
+                    row.insertCell(0).innerText = record[0];
+                    row.insertCell(1).innerText = record[1];
+                    row.insertCell(2).innerText = record[2];
+                    row.insertCell(3).innerText = "₹ " + record[3].toFixed(2);
+                    row.insertCell(4).innerText = record[4];
+                    row.insertCell(5).innerText = record[5];
+                    row.insertCell(6).innerText = record[6];
+                });
+                document.getElementById('history-modal').style.display = 'flex';
+                sysLog("Database viewer opened.");
+            }
+        };
+
+    </script>
+</body>
+</html>

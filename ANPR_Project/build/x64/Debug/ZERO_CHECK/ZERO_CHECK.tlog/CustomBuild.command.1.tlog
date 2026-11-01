@@ -1,0 +1,10 @@
+^C:\USERS\DELL\DESKTOP\PARKINGSYSTEM\ANPR_PROJECT\BUILD\CMAKEFILES\E8F6BF6D21CA921C8C34454F5E506F82\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Dell/Desktop/ParkingSystem/ANPR_Project -BC:/Users/Dell/Desktop/ParkingSystem/ANPR_Project/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Dell/Desktop/ParkingSystem/ANPR_Project/build/ANPR_System.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

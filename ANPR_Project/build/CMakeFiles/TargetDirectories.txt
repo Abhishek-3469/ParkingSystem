@@ -1,0 +1,3 @@
+C:/Users/Dell/Desktop/ParkingSystem/ANPR_Project/build/CMakeFiles/ANPR_App.dir
+C:/Users/Dell/Desktop/ParkingSystem/ANPR_Project/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Dell/Desktop/ParkingSystem/ANPR_Project/build/CMakeFiles/ZERO_CHECK.dir

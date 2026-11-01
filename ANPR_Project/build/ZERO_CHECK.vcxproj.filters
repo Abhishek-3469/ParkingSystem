@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Dell\Desktop\ParkingSystem\ANPR_Project\build\CMakeFiles\e8f6bf6d21ca921c8c34454f5e506f82\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{2AA2CE3C-58C5-3B7F-815B-F4BDFB123DDF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
